@@ -337,7 +337,7 @@ RSpec.describe Msf::Modules::Loader::Base do
         it 'should set the parent_path on the namespace_module to match the parent_path passed to #load_module' do
           allow(module_manager).to receive(:on_module_load)
 
-          allow(subject).to receive(:read_module_content).and_receive(module_content)
+          allow(subject).to receive(:read_module_content).and_return(module_content)
 
           expect(subject.load_module(parent_path, type, module_reference_name)).to be_truthy
 
@@ -419,9 +419,9 @@ RSpec.describe Msf::Modules::Loader::Base do
               allow(@namespace_module).to receive(:module_eval_with_lexical_scope).and_raise(error)
 
               @module_load_error_by_path = {}
-              expect(module_manager).to receive(:module_load_error_by_path).and_return(@module_load_error_by_path)
+              allow(module_manager).to receive(:module_load_error_by_path).and_return(@module_load_error_by_path)
 
-              expect(error).to receive(:backtrace).and_return(backtrace)
+              allow(error).to receive(:backtrace).and_return(backtrace)
             end
 
             context 'with version compatibility' do
@@ -477,18 +477,18 @@ RSpec.describe Msf::Modules::Loader::Base do
         context 'without module_eval errors' do
           before(:each) do
             @namespace_module = double('Namespace Module')
-            expect(@namespace_module).to receive(:parent_path=)
-            expect(@namespace_module).to receive(:module_eval_with_lexical_scope).with(module_content, module_path)
+            allow(@namespace_module).to receive(:parent_path=)
+            allow(@namespace_module).to receive(:module_eval_with_lexical_scope).with(module_content, module_path)
 
             metasploit_class = double('Metasploit Class', :parent => @namespace_module)
-            expect(@namespace_module).to receive(:metasploit_class!).and_return(metasploit_class)
+            allow(@namespace_module).to receive(:metasploit_class!).and_return(metasploit_class)
 
-            expect(subject).to receive(:namespace_module_transaction).and_yield(@namespace_module)
+            allow(subject).to receive(:namespace_module_transaction).and_yield(@namespace_module)
 
-            expect(subject).to receive(:read_module_content).with(parent_path, type, module_reference_name).and_return(module_content)
+            allow(subject).to receive(:read_module_content).with(parent_path, type, module_reference_name).and_return(module_content)
 
             @module_load_error_by_path = {}
-            expect(module_manager).to receive(:module_load_error_by_path).and_return(@module_load_error_by_path)
+            allow(module_manager).to receive(:module_load_error_by_path).and_return(@module_load_error_by_path)
           end
 
           it 'should check for version compatibility' do
@@ -539,9 +539,9 @@ RSpec.describe Msf::Modules::Loader::Base do
 
           context 'with version compatibility' do
             before(:each) do
-              expect(@namespace_module).to receive(:version_compatible!).with(module_path, module_reference_name)
+              allow(@namespace_module).to receive(:version_compatible!).with(module_path, module_reference_name)
 
-              expect(module_manager).to receive(:on_module_load)
+              allow(module_manager).to receive(:on_module_load)
             end
 
             context 'without metasploit_class' do
@@ -583,7 +583,7 @@ RSpec.describe Msf::Modules::Loader::Base do
               end
 
               before(:each) do
-                expect(@namespace_module).to receive(:metasploit_class!).and_return(metasploit_class)
+                allow(@namespace_module).to receive(:metasploit_class!).and_return(metasploit_class)
               end
 
               it 'should check if it is usable' do
@@ -615,7 +615,7 @@ RSpec.describe Msf::Modules::Loader::Base do
               context 'with usable metasploit_class' do
                 before(:each) do
                   # remove the mocked namespace_module since happy-path/real loading is occurring in this context
-                  subject.unstub(:namespace_module_transaction)
+                  allow(subject).to receive(:namespace_module_transaction).and_call_original
                 end
 
                 it 'should log load information' do

@@ -34,7 +34,7 @@ shared_examples_for 'Msf::Module::Search' do
     end
 
     let(:opts) { Hash.new }
-    before { expect(subject).to receive(:fullname).and_return('/module') }
+    before { allow(subject).to receive(:fullname).and_return('/module') }
     subject { Msf::Module.new(opts) }
     accept = []
     reject = []
@@ -44,7 +44,13 @@ shared_examples_for 'Msf::Module::Search' do
     end
 
     context 'on a client module' do
-      before { expect(subject).to receive(:stance).and_return('passive') }
+      before do
+        if subject.respond_to? :stance
+          allow(subject).to receive(:stance).and_return('passive')
+        else
+          skip
+        end
+      end
       accept = %w(app:client)
       reject = %w(app:server)
 
@@ -52,7 +58,13 @@ shared_examples_for 'Msf::Module::Search' do
     end
 
     context 'on a server module' do
-      before { expect(subject).to receive(:stance).and_return('aggressive') }
+      before do
+        if subject.respond_to? :stance
+          allow(subject).to receive(:stance).and_return('aggressive')
+        else
+          skip
+          end
+      end
       accept = %w(app:server)
       reject = %w(app:client)
 
@@ -117,7 +129,7 @@ shared_examples_for 'Msf::Module::Search' do
 
     context 'on a module with a default RPORT of 5555' do
       before do
-        expect(subject).to receive(:datastore).and_return({ 'RPORT' => 5555 })
+        allow(subject).to receive(:datastore).and_return({ 'RPORT' => 5555 })
       end
 
       accept = %w(port:5555)
@@ -133,7 +145,7 @@ shared_examples_for 'Msf::Module::Search' do
     end
 
     context 'on a module with a #fullname of "blah"' do
-      before { expect(subject).to receive(:fullname).and_return('/c/d/e/blah') }
+      before { allow(subject).to receive(:fullname).and_return('/c/d/e/blah') }
       it_should_behave_like 'search_filter', :accept => %w(text:blah), :reject => %w(text:foo)
       it_should_behave_like 'search_filter', :accept => %w(path:blah), :reject => %w(path:foo)
     end
@@ -147,7 +159,7 @@ shared_examples_for 'Msf::Module::Search' do
       all_module_types = Msf::MODULE_TYPES
       all_module_types.each do |mtype|
         context "on a #{mtype} module" do
-          before(:each) { expect(subject).to receive(:type).and_return(mtype) }
+          before(:each) { allow(subject).to receive(:type).and_return(mtype) }
 
           accept = ["type:#{mtype}"]
           reject = all_module_types.reject { |t| t == mtype }.map { |t| "type:#{t}" }

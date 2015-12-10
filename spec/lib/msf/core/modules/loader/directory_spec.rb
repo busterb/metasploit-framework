@@ -33,9 +33,9 @@ RSpec.describe Msf::Modules::Loader::Directory do
           framework = double('Msf::Framework', :datastore => {})
 
           events = double('Events')
-          expect(events).to receive(:on_module_load)
-          expect(events).to receive(:on_module_created)
-          expect(framework).to receive(:events).and_return(events)
+          allow(events).to receive(:on_module_load)
+          allow(events).to receive(:on_module_created)
+          allow(framework).to receive(:events).and_return(events)
 
           framework
         end
@@ -107,8 +107,8 @@ RSpec.describe Msf::Modules::Loader::Directory do
         end
 
         before(:each) do
-          expect(module_manager).to receive(:file_changed?).and_return(true)
-          expect(module_manager).to receive(:module_load_error_by_path).and_return({})
+          allow(module_manager).to receive(:file_changed?).and_return(true)
+          allow(module_manager).to receive(:module_load_error_by_path).and_return({})
         end
 
         it 'should not raise an error' do
@@ -134,7 +134,7 @@ RSpec.describe Msf::Modules::Loader::Directory do
         end
 
         before(:each) do
-          expect(subject).to receive(:load_error).with(module_path, kind_of(Errno::ENOENT))
+          allow(subject).to receive(:load_error).with(module_path, kind_of(Errno::ENOENT))
         end
 
         # this ensures that the File.exist?(module_path) checks are checking the same path as the code under test
