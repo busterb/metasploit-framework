@@ -9,7 +9,6 @@ require 'rex'
 
 class MetasploitModule < Msf::Post
 
-
   def initialize(info={})
     super( update_info( info,
         'Name'          => 'Windows Manage Network Route via Meterpreter Session',
@@ -27,7 +26,6 @@ class MetasploitModule < Msf::Post
              'todb',
              'Josh Hale <jhale85446[at]gmail.com>'
            ],
-        'Platform'      => [ 'win' ],
         'SessionTypes'  => [ 'meterpreter']
       ))
 
