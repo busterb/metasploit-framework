@@ -48,7 +48,6 @@ class Core
     "-k"  => [ true,  "Terminate sessions by session ID and/or range"                  ],
     "-K"  => [ false, "Terminate all sessions"                                         ],
     "-s"  => [ true,  "Run a script or module on the session given with -i, or all"    ],
-    "-r"  => [ false, "Reset the ring buffer for the session given with -i, or all"    ],
     "-u"  => [ true,  "Upgrade a shell to a meterpreter session on many platforms"     ],
     "-t"  => [ true,  "Set a response timeout (default: 15)"                           ],
     "-S"  => [ true,  "Row search filter."                                             ],
@@ -1139,7 +1138,6 @@ class Core
     sid      = nil
     cmds     = []
     script   = nil
-    reset_ring = false
     response_timeout = 15
     search_term = nil
     session_name = nil
@@ -1193,10 +1191,6 @@ class Core
         # Search for specific session
         when "-S", "--search"
           search_term = val
-        # Reset the ring buffer read pointer
-        when "-r"
-          reset_ring = true
-          method = 'reset_ring'
         # Display help banner
         when "-h"
           cmd_sessions_help
@@ -1451,14 +1445,6 @@ class Core
           print_status("Sleeping 5 seconds to allow the previous handler to finish..")
           sleep(5)
         end
-      end
-    when 'reset_ring'
-      sessions = sid ? [sid] : framework.sessions.keys
-      sessions.each do |sidx|
-        s = framework.sessions[sidx]
-        next unless (s && s.respond_to?(:ring_seq))
-        s.reset_ring_sequence
-        print_status("Reset the ring buffer pointer for Session #{sidx}")
       end
     when 'list',nil
       print_line
