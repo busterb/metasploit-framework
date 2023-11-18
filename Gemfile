@@ -32,7 +32,7 @@ end
 
 group :development, :test do
   # automatically include factories from spec/factories
-  gem 'factory_bot_rails'
+  gem 'factory_bot_rails', '>= 6.3.0'
   # Make rspec output shorter and more useful
   gem 'fivemat'
   # running documentation generation tasks and rspec tasks
