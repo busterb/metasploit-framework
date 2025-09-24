@@ -32,7 +32,7 @@ end
 
 group :development, :test do
   # For ./tools/dev/update_gem_licenses.sh
-  gem 'license_finder', '5.11.1'
+  gem 'license_finder', '6.0.0'
   # running documentation generation tasks and rspec tasks
   gem 'rake'
   # Define `rake spec`.  Must be in development AND test so that its available by default as a rake test when the
