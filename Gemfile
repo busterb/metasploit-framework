@@ -20,17 +20,19 @@ group :development do
   # Replaces the old lib/debug.rb and provides more features.
   gem 'debug', '>= 1.0.0'
   # module documentation
-  gem 'octokit'
+  gem 'octokit', '>= 5.0.0'
   # memory profiling
   gem 'memory_profiler'
   # cpu profiling
-  gem 'ruby-prof', '1.4.2'
+  gem 'ruby-prof'
   # Metasploit::Aggregator external session proxy
   # disabled during 2.5 transition until aggregator is available
   # gem 'metasploit-aggregator'
 end
 
 group :development, :test do
+  # For ./tools/dev/update_gem_licenses.sh
+  gem 'license_finder', '5.11.1'
   # running documentation generation tasks and rspec tasks
   gem 'rake'
   # Define `rake spec`.  Must be in development AND test so that its available by default as a rake test when the
@@ -38,7 +40,7 @@ group :development, :test do
   gem 'rspec-rails'
   gem 'rspec-rerun'
   # Required during CI as well local development
-  gem 'rubocop'
+  gem 'rubocop', '1.75.7'
 end
 
 group :test do
