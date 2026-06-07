@@ -18,7 +18,7 @@ group :development do
   gem 'pry-byebug'
   # Ruby Debugging Library - rebuilt and included by default from Ruby 3.1 onwards.
   # Replaces the old lib/debug.rb and provides more features.
-  gem 'debug', '>= 1.0.0'
+  gem 'debug', '>= 1.11.1'
   # module documentation
   gem 'octokit'
   # memory profiling
@@ -37,10 +37,10 @@ group :development, :test do
   gem 'rake'
   # Define `rake spec`.  Must be in development AND test so that its available by default as a rake test when the
   # environment is development
-  gem 'rspec-rails'
+  gem 'rspec-rails', '>= 8.0.3'
   gem 'rspec-rerun'
   # Required during CI as well local development
-  gem 'rubocop', '1.75.7'
+  gem 'rubocop', '1.75.8'
 end
 
 group :test do
