@@ -37,7 +37,7 @@ group :development, :test do
   gem 'rake'
   # Define `rake spec`.  Must be in development AND test so that its available by default as a rake test when the
   # environment is development
-  gem 'rspec-rails'
+  gem 'rspec-rails', '>= 8.0.0'
   gem 'rspec-rerun'
   # Required during CI as well local development
   gem 'rubocop', '1.75.7'
@@ -46,7 +46,7 @@ end
 group :test do
   # automatically include factories from spec/factories
   gem 'test-prof'
-  gem 'factory_bot_rails'
+  gem 'factory_bot_rails', '>= 6.5.0'
   # Make rspec output shorter and more useful
   gem 'fivemat'
   # rspec formatter for acceptance tests
