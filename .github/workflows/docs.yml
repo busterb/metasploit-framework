@@ -38,12 +38,17 @@ jobs:
       fail-fast: true
       matrix:
         ruby:
-          - '3.0'
+          - '3.3'
 
     name: Ruby ${{ matrix.ruby }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      # https://github.com/orgs/community/discussions/26952
+      - name: Support longpaths
+        if: runner.os == 'Windows'
+        run: git config --system core.longpaths true
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1

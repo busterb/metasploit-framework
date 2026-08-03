@@ -65,7 +65,9 @@ class MsfAutoload
       "#{__dir__}/rex/post.rb",
       "#{__dir__}/rex/proto/ssh/hrr_rb_ssh.rb",
       "#{__dir__}/rex/proto/ssh/connection.rb",
-      "#{__dir__}/rex/proto/kerberos/pac/krb5_pac.rb"
+      "#{__dir__}/rex/proto/kerberos/pac/krb5_pac.rb",
+      "#{__dir__}/msf/core/mcp.rb",
+      "#{__dir__}/msf/core/mcp/"
     ]
   end
 
@@ -124,6 +126,7 @@ class MsfAutoload
       'macho' => 'MachO',
       'nodejs' => 'NodeJS',
       'jsobfu' => 'JSObfu',
+      'vbsobfuscate' => 'VBSObfuscate',
       'osx' => 'OSX',
       'webrtc' => 'WebRTC',
       'json' => 'JSON',
@@ -166,11 +169,11 @@ class MsfAutoload
       'dns' => 'DNS',
       'smtp_deliver' => 'SMTPDeliver',
       'send_uuid' => 'SendUUID',
+      'exec_x86' => 'Exec_X86',
       'exec_x64' => 'Exec_x64',
       'reflective_dll_injection' => 'ReflectiveDLLInjection',
       'reflective_pe_loader' => 'ReflectivePELoader',
       'pe_inject' => 'PEInject',
-      'payload_db_conf' => 'PayloadDBConf',
       'reverse_tcp_x86' => 'ReverseTcp_x86',
       'reverse_tcp_aarch64' => 'ReverseTcp_Aarch64',
       'ruby_dl' => 'RubyDL',
@@ -298,7 +301,15 @@ class MsfAutoload
       'uds_errors' => 'UDSErrors',
       'smb_hash_capture' => 'SMBHashCapture',
       'rex_ntlm' => 'RexNTLM',
-      'teamcity' => 'TeamCity'
+      'teamcity' => 'TeamCity',
+      'nist_sp_800_38f' => 'NIST_SP_800_38f',
+      'nist_sp_800_108' => 'NIST_SP_800_108',
+      'sccm' => 'SCCM',
+      'pfsense' => 'PfSense',
+      'opnsense' => 'OPNSense',
+      'pgadmin' => 'PgAdmin',
+      'freepbx' => 'FreePBX',
+      'complete_pbx' => 'CompletePBX'
     }
   end
 
@@ -336,11 +347,17 @@ class MsfAutoload
 end
 
 # global autoload of common gems
+autoload :BCrypt, 'bcrypt'
+autoload :Dnsruby, 'dnsruby'
 autoload :Faker, 'faker'
 autoload :BinData, 'bindata'
+autoload :Metasm, 'metasm'
+autoload :Recog, 'recog'
 autoload :RubySMB, 'ruby_smb'
 autoload :MetasploitPayloads, 'metasploit-payloads'
 autoload :PacketFu, 'packetfu'
+autoload :Zip, 'zip'
+autoload :DidYouMean, 'did_you_mean'
 
 require 'rexml/document'
 # Load IO#expect moneypatch

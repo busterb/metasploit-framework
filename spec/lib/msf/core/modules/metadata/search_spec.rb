@@ -1,5 +1,3 @@
-# -*- coding: binary -*-
-
 require 'spec_helper'
 
 RSpec.describe Msf::Modules::Metadata::Search do
@@ -57,6 +55,9 @@ RSpec.describe Msf::Modules::Metadata::Search do
     it { expect(described_class.parse_search_string("session_type:Meterpreter ")).to eq({"session_type"=>[["meterpreter"], []]}) }
     it { expect(described_class.parse_search_string("session_type:shell ")).to eq({"session_type"=>[["shell"], []]}) }
     it { expect(described_class.parse_search_string("action:forge_golden ")).to eq({"action"=>[["forge_golden"], []]}) }
+    it { expect(described_class.parse_search_string("targets:windows ")).to eq({"targets"=>[["windows"], []]}) }
+    it { expect(described_class.parse_search_string("targets:osx ")).to eq({"targets"=>[["osx"], []]}) }
+    it { expect(described_class.parse_search_string("targets:ubuntu ")).to eq({"targets"=>[["ubuntu"], []]}) }
   end
 
   describe '#find' do
@@ -151,6 +152,13 @@ RSpec.describe Msf::Modules::Metadata::Search do
       it_should_behave_like 'search_filter', :accept => accept, :reject => reject
     end
 
+    context 'on a module with a #author of nil' do
+      let(:opts) { ({ 'author' => [nil] }) }
+      reject = %w(author:foo)
+
+      it_should_behave_like 'search_filter', :reject => reject
+    end
+
     context 'on a module with the authors "joev" and "blarg"' do
       let(:opts) { ({ 'author' => ['joev', 'blarg'] }) }
       accept = %w(author:joev author:joe)
@@ -231,6 +239,46 @@ RSpec.describe Msf::Modules::Metadata::Search do
       reject = %w[session_type:unrelated]
 
       it_should_behave_like 'search_filter', accept: accept, reject: reject
+    end
+
+    context 'on a module with a #targets of ["windows"]' do
+      let(:opts) { { 'targets' => ['windows'] } }
+      accept = %w[targets:windows]
+      reject = %w[targets:unrelated]
+
+      it_should_behave_like 'search_filter', accept: accept, reject: reject
+    end
+
+    context 'on a module with a #targets of ["osx"]' do
+      let(:opts) { { 'targets' => ['osx'] } }
+      accept = %w[targets:osx]
+      reject = %w[targets:unrelated]
+
+      it_should_behave_like 'search_filter', accept: accept, reject: reject
+    end
+
+    context 'on a module with a #targets of ["ubuntu"]' do
+      let(:opts) { { 'targets' => ['ubuntu'] } }
+      accept = %w[targets:ubuntu]
+      reject = %w[targets:unrelated]
+
+      it_should_behave_like 'search_filter', accept: accept, reject: reject
+    end
+
+    context 'on a module with a #targets of ["ubuntu", "windows", "osx"]' do
+      let(:opts) { { 'targets' => %w[ubuntu windows osx] } }
+      accept = %w[targets:osx]
+      reject = %w[targets:unrelated]
+
+      it_should_behave_like 'search_filter', accept: accept, reject: reject
+    end
+
+    context 'on a module with a #targets of nil' do
+      let(:opts) { { 'targets' => nil } }
+
+      reject = %w[targets:foo]
+
+      it_should_behave_like 'search_filter', reject: reject
     end
 
     context 'on a module that supports the osx platform' do
@@ -320,8 +368,8 @@ RSpec.describe Msf::Modules::Metadata::Search do
           'search_filter',
           accept: [
             "author:István",
-            "author:Istv\xE1n ",
-            "author:Istv\u00E1n ",
+            "author:Istv\xE1n ".b,
+            "author:Istv\u00E1n ".b,
           ],
           :reject => [
             'different_author'
@@ -335,11 +383,11 @@ RSpec.describe Msf::Modules::Metadata::Search do
           'search_filter',
           accept: [
             'different_author',
-            "author:Istv\xE1n",
+            "author:Istv\xE1n".b,
           ],
           :reject => [
             "author:István",
-            "author:Istv\u00E1n ",
+            "author:Istv\u00E1n ".b,
           ],
           :test_inverse => false
         )
@@ -358,6 +406,14 @@ RSpec.describe Msf::Modules::Metadata::Search do
           it_should_behave_like 'search_filter', :accept => accept, :reject => reject
         end
       end
+    end
+
+    context 'on a module with a #reference of nil' do
+      let(:opts) { { 'references' => nil } }
+
+      reject = %w[reference:foo]
+
+      it_should_behave_like 'search_filter', reject: reject
     end
 
     REF_TYPES.each do |ref_type|

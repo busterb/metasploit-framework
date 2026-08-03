@@ -18,27 +18,29 @@ group :development do
   gem 'pry-byebug'
   # Ruby Debugging Library - rebuilt and included by default from Ruby 3.1 onwards.
   # Replaces the old lib/debug.rb and provides more features.
-  gem 'debug', '>= 1.0.0'
+  gem 'debug', '>= 1.11.1'
   # module documentation
   gem 'octokit'
   # memory profiling
   gem 'memory_profiler'
   # cpu profiling
-  gem 'ruby-prof', '1.4.2'
+  gem 'ruby-prof'
   # Metasploit::Aggregator external session proxy
   # disabled during 2.5 transition until aggregator is available
   # gem 'metasploit-aggregator'
 end
 
 group :development, :test do
+  # For ./tools/dev/update_gem_licenses.sh - custom fork (branch: rapid7-rubyzip-dependency-bump) until https://github.com/pivotal/LicenseFinder/pull/1063 lands
+  gem 'license_finder', git: 'https://github.com/rapid7/LicenseFinder', ref: '2b1aefcfd6d0745d17843050c1c89f973c1fa98c'
   # running documentation generation tasks and rspec tasks
   gem 'rake'
   # Define `rake spec`.  Must be in development AND test so that its available by default as a rake test when the
   # environment is development
-  gem 'rspec-rails'
+  gem 'rspec-rails', '>= 8.0.3'
   gem 'rspec-rerun'
   # Required during CI as well local development
-  gem 'rubocop'
+  gem 'rubocop', '1.75.8'
 end
 
 group :test do
@@ -51,5 +53,6 @@ group :test do
   gem 'allure-rspec'
   # Manipulate Time.now in specs
   gem 'timecop'
+  # stub and set expectations on HTTP requests
+  gem 'webmock', '~> 3.18'
 end
-

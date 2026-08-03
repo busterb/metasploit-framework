@@ -48,6 +48,7 @@ module Msf
     include Msf::Module::Author
     include Msf::Module::Compatibility
     include Msf::Module::DataStore
+    include Msf::Module::Failure
     include Msf::Module::FullName
     include Msf::Module::ModuleInfo
     include Msf::Module::ModuleStore
@@ -113,7 +114,8 @@ module Msf
       @module_info_copy = info.dup
 
       self.module_info = info
-      generate_uuid
+      # Initialize UUID for RPC compatibility
+      uuid
 
       set_defaults
 
@@ -124,10 +126,10 @@ module Msf
       info_fixups
 
       # Transform some of the fields to arrays as necessary
-      self.author = Msf::Author.transform(module_info['Author'])
-      self.arch = Rex::Transformer.transform(module_info['Arch'], Array, [ String ], 'Arch')
-      self.platform = PlatformList.transform(module_info['Platform'])
-      self.references = Rex::Transformer.transform(module_info['References'], Array, [ SiteReference, Reference ], 'Ref')
+      self.author = Msf::Author.transform(merge_module_info_with_target_info(module_info, 'Author'))
+      self.arch = Rex::Transformer.transform(merge_module_info_with_target_info(module_info, 'Arch'), Array, [ String ], 'Arch')
+      self.platform = PlatformList.transform(merge_module_info_with_target_info(module_info, 'Platform'))
+      self.references = Rex::Transformer.transform(merge_module_info_with_target_info(module_info, 'References'), Array, [ SiteReference, Reference ], 'Ref')
 
       # Create and initialize the option container for this module
       self.options = Msf::OptionContainer.new
@@ -455,11 +457,19 @@ module Msf
       self.module_store = {}
     end
 
+    def merge_module_info_with_target_info(module_info, key)
+      entries = Array.wrap(module_info[key])
+      if (module_targets = module_info['Targets'])
+        module_targets.each do |_target_name, target_info|
+          entries += Array.wrap(target_info[key])
+        end
+      end
+      entries.uniq
+    end
+
     attr_writer   :platform, :references # :nodoc:
     attr_writer   :privileged # :nodoc:
     attr_writer   :license # :nodoc:
-
-
 
   end
 

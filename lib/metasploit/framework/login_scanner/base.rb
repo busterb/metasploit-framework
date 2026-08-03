@@ -45,6 +45,9 @@ module Metasploit
           # @!attribute bruteforce_speed
           #   @return [Integer] The desired speed, with 5 being 'fast' and 0 being 'slow.'
           attr_accessor :bruteforce_speed
+          # @!attribute sslkeylogfile
+          #   @return [String] The SSL key log file path
+          attr_accessor :sslkeylogfile
 
           validates :connection_timeout,
                     presence: true,
@@ -135,6 +138,10 @@ module Metasploit
           # @return [void]
           def sleep_between_attempts(time=self.sleep_time)
             ::IO.select(nil,nil,nil,time) unless sleep_time.zero?
+          end
+
+          def workspace
+            framework_module&.workspace || framework&.db&.workspace&.name
           end
 
           def each_credential

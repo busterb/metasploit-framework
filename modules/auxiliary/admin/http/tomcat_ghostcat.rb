@@ -47,7 +47,7 @@ class MetasploitModule < Msf::Auxiliary
         'References' => [
           ['CVE', '2020-1938'],
           ['EDB', '48143'],
-          ['URL', 'https://www.chaitin.cn/en/ghostcat']
+          ['URL', 'http://web.archive.org/web/20250114042903/https://www.chaitin.cn/en/ghostcat']
         ],
         'DisclosureDate' => '2020-02-20',
         'Notes' => {
@@ -151,7 +151,7 @@ class MetasploitModule < Msf::Auxiliary
       return Exploit::CheckCode::Appears("Successfully read file #{datastore['FILENAME']}")
     end
 
-    Exploit::CheckCode::Safe
+    Exploit::CheckCode::Safe('Target did not return a valid Ghostcat response')
   rescue StandardError => e
     Exploit::CheckCode::Unknown(e.message)
   end
