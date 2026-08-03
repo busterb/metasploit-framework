@@ -20,7 +20,7 @@ group :development do
   # Replaces the old lib/debug.rb and provides more features.
   gem 'debug', '>= 1.0.0'
   # module documentation
-  gem 'octokit'
+  gem 'octokit', '>= 5.0.0'
   # memory profiling
   gem 'memory_profiler'
   # cpu profiling
@@ -35,7 +35,7 @@ group :development, :test do
   gem 'rake'
   # Define `rake spec`.  Must be in development AND test so that its available by default as a rake test when the
   # environment is development
-  gem 'rspec-rails'
+  gem 'rspec-rails', '>= 7.0.2'
   gem 'rspec-rerun'
   # Required during CI as well local development
   gem 'rubocop'
@@ -44,7 +44,7 @@ end
 group :test do
   # automatically include factories from spec/factories
   gem 'test-prof'
-  gem 'factory_bot_rails'
+  gem 'factory_bot_rails', '>= 6.5.0'
   # Make rspec output shorter and more useful
   gem 'fivemat'
   # rspec formatter for acceptance tests
