@@ -20,7 +20,7 @@ group :development do
   # Replaces the old lib/debug.rb and provides more features.
   gem 'debug', '>= 1.0.0'
   # module documentation
-  gem 'octokit'
+  gem 'octokit', '>= 4.21.0'
   # memory profiling
   gem 'memory_profiler'
   # cpu profiling
